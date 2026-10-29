@@ -1,6 +1,7 @@
 const fs=require('fs'),vm=require('vm'),assert=require('assert');
 const handlers={},elements={};const el=s=>elements[s]||(elements[s]={classList:{add(){},remove(){}},style:{},textContent:'',disabled:false,focus(){},addEventListener(){},getContext:()=>gl});
-const gl=new Proxy({getShaderParameter:()=>true,getProgramParameter:()=>true,getAttribLocation:()=>0,getUniformLocation:()=>0},{get:(o,k)=>k in o?o[k]:(()=>({}))});
+let bufferUploads=0;
+const gl=new Proxy({bufferData(){bufferUploads++;},getShaderParameter:()=>true,getProgramParameter:()=>true,getAttribLocation:()=>0,getUniformLocation:()=>0},{get:(o,k)=>k in o?o[k]:(()=>({}))});
 const ctx={document:{querySelector:el,querySelectorAll:()=>[],addEventListener(){}},window:{},console,Image:class{},fetch:()=>new Promise(()=>{}),requestAnimationFrame(){},addEventListener:(k,fn)=>handlers[k]=fn,Float32Array,Uint8Array,Math,Promise,Error};
 let collectionSounds=0;ctx.window.gameAudio={unlock(){},collect(){collectionSounds++;}};
 vm.createContext(ctx);vm.runInContext(fs.readFileSync(__dirname+'/dist/game.js','utf8'),ctx);
@@ -22,3 +23,10 @@ run('start()');assert.equal(run('won'),false);assert.equal(run('gems.filter(g=>g
 run('characterPacks={sword:{sprite:1,idle:2,manifest:3},laurel:{sprite:4,idle:5,manifest:6}};selectCharacter("laurel")');assert.equal(run('selectedCharacter'),'laurel');assert.equal(run('sprite'),4);
 run('openCharacterSelection()');assert.equal(run('playing'),false);run('selectCharacter("sword");start()');assert.equal(run('sprite'),1);assert.equal(run('playing'),true);
 console.log('PASS: two-way portal contact, cooldown, character and collection preservation, character switching, movement, jump, landing, pause, respawn, restart. WebGL API mocked; browser rendering requires separate QA.');
+const uploadCount=bufferUploads;
+ctx.testManifest=JSON.parse(fs.readFileSync(__dirname+'/dist/assets/sword-manifest.json','utf8'));
+run('manifest=testManifest;sprite=idleSprite={tex:{},width:768,height:192};bg=skyBackground=portalSprite={tex:{},width:1200,height:480};ready=true;');
+for(let scene=0;scene<3;scene++)run(`setScene(${scene},260);for(let i=0;i<60;i++)render(i/60)`);
+assert.equal(bufferUploads,uploadCount,'Rendering must reuse uploaded geometry');
+assert.equal(run('load("assets/sword-run.png")===load("assets/sword-run.png")'),true,'Duplicate textures share the same load');
+console.log('PASS: all three scenes render without per-frame geometry uploads; duplicate texture requests share a promise.');

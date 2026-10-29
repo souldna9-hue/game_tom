@@ -1,0 +1,10 @@
+{
+  "name": "ember-laurel-run",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "node scripts/build.cjs",
+    "test": "node check-physics.cjs && node scripts/check-build.cjs"
+  },
+  "engines": { "node": ">=22" }
+}

@@ -4,6 +4,32 @@ WebGL 사이드뷰 플랫폼 게임입니다. 세 캐릭터 중 하나를 골라
 
 [배포된 게임 실행](https://laurel-ember-run-1028.souldna9.chatgpt.site/)
 
+## Vercel 배포
+
+Vercel에서 이 GitHub 저장소를 Import하고 배포하세요. 저장소 루트의 `vercel.json`이 설정을 지정합니다.
+
+- Root Directory: 저장소 루트 (`.`)
+- Framework Preset: Other
+- Build Command: `npm run build`
+- Output Directory: `public`
+- 환경변수 및 외부 API 키: 필요 없음
+
+빌드는 Node.js 기본 모듈만 사용하며 외부 npm 의존성이 없습니다. JS/CSS/이미지/JSON 파일명에 내용 해시를 붙이고, `/assets/` 파일에 장기 캐시를 적용합니다. HTML은 재검증하므로 새 배포 시 최신 파일을 가리킵니다. `public/`은 생성 폴더이며 Git에 포함하지 않습니다.
+
+```sh
+node scripts/build.cjs
+python -m http.server 8000 --directory public
+```
+
+### 최적화
+
+- 배경·선택 카드 이미지를 WebP로 압축; 픽셀 아틀라스와 포털은 PNG 유지
+- 중복 아틀라스 및 사용하지 않는 파일 제거
+- 같은 이미지 요청과 GPU 텍스처 재사용
+- 정적 도형 버퍼를 초기화 시 한 번 업로드하고 매 프레임 재사용
+- 화면 밖 도형 렌더링 생략, 타이머 DOM은 초 단위로 갱신
+- 외부 웹폰트 요청을 제거하고 시스템 한글 글꼴 사용
+
 ## 실행
 
 별도 빌드나 npm 패키지 설치가 필요하지 않습니다. 저장소 폴더에서 정적 서버를 실행하세요.
@@ -39,6 +65,7 @@ Node.js로 게임 로직 검사를 실행할 수 있습니다.
 
 ```sh
 node check-physics.cjs
+node scripts/check-build.cjs
 ```
 
 검사는 이동, 점프, 착지, 수집, 효과음 호출, 장면 전환, 캐릭터 선택을 확인하며 WebGL API는 모의 처리합니다. 실제 화면과 음향은 브라우저에서 확인하세요.
